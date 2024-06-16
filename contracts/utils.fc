@@ -1,0 +1,43 @@
+#include "jetton/imports/jetton-utils.fc";
+#include "jetton/imports/op-codes.fc";
+
+
+const const::tx_fee = 2 * 10000000;
+const const::tx_fee_send_jetton = 40000000; ;; 0.035 TON
+
+() send_jetton(slice recepient, int amount, slice JETTON_MASTER_ADDRESS, cell JETTON_BYTE_CODE) impure inline {
+    if (amount == 0) {
+        return ();
+    }
+    slice jetton_wallet = calculate_user_jetton_wallet_address(my_address(), JETTON_MASTER_ADDRESS, JETTON_BYTE_CODE);
+
+    var msg = begin_cell()
+    .store_uint(0x10, 6) ;; nobounce - int_msg_info$0 ihr_disabled:Bool bounce:Bool bounced:Bool src:MsgAddress -> 011000
+    .store_slice(jetton_wallet)
+    .store_coins(const::tx_fee_send_jetton)
+    .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1)
+    .store_maybe_ref(
+        begin_cell()
+        .store_uint(op::transfer(), 32)
+        .store_uint(0, 64)
+        .store_coins(amount)
+        .store_slice(recepient)
+        .store_slice(recepient)
+        .store_uint(0, 1)
+        .store_coins(1)
+        .store_uint(0, 1)
+        .end_cell()
+    );
+    send_raw_message(msg.end_cell(), 1); ;; paying fees, revert on errors
+
+}
+
+() send_ton(slice recepient, int amount, int mode) impure inline {
+    var msg = begin_cell()
+    .store_uint(0x10, 6)
+    .store_slice(recepient)
+    .store_grams(amount)
+    .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+    .end_cell();
+    send_raw_message(msg, mode);
+}
