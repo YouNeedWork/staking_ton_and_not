@@ -92,10 +92,7 @@ global cell ctx_admin_info;
         cell JETTON_BYTECODE = jetton_info_slice~load_ref();
         throw_unless(error::jetton_sender, equal_slices(sender_address, calculate_user_jetton_wallet_address(my_address(), jetton_master_address, JETTON_BYTECODE)));
         slice origin_sender = in_msg_body~load_msg_addr(); ;; transfer origin address (not used)
-        cell creed_data = in_msg_body~load_ref();
-        slice creed_data_slice = creed_data.begin_parse();
-        int creed_id = creed_data_slice~load_uint(64);
-        slice dict_key = begin_cell().store_slice(origin_sender).store_uint(creed_id, 64).end_cell().begin_parse();
+        slice dict_key = begin_cell().store_slice(origin_sender).end_cell().begin_parse();
         (slice data, int f) = ctx_not_states.udict_get?(256, slice_hash(dict_key));
         int jettonAmount = 0;
         ifnot(f == 0) {
